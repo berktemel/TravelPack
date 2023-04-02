@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1010.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="profile.Controller">
+   <children>
+      <VBox prefHeight="1010.0" prefWidth="436.0" style="-fx-background-color: #6495ED#6495ED;" AnchorPane.leftAnchor="0.0">
+         <children>
+            <Button fx:id="buttonEdit" mnemonicParsing="false" onAction="#editProfile" prefHeight="46.0" prefWidth="99.0" style="-fx-background-radius: 15px;" text="Edit Profile">
+               <VBox.margin>
+                  <Insets left="310.0" top="30.0" />
+               </VBox.margin>
+            </Button>
+            <ImageView fitHeight="200.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../profile_img1.png" />
+               </image>
+               <VBox.margin>
+                  <Insets left="100.0" top="80.0" />
+               </VBox.margin>
+            </ImageView>
+            <Label alignment="TOP_LEFT" prefHeight="20.0" text="Mert Özdemir" textFill="#dcd3d3">
+               <VBox.margin>
+                  <Insets left="135.0" top="30.0" />
+               </VBox.margin>
+               <font>
+                  <Font size="24.0" />
+               </font>
+            </Label>
+            <Label alignment="CENTER" prefHeight="37.0" prefWidth="299.0" text="Age: 25 years old&#10;" textAlignment="CENTER" textFill="WHITE">
+               <VBox.margin>
+                  <Insets left="60.0" top="10.0" />
+               </VBox.margin>
+            </Label>
+            <Label alignment="CENTER" prefHeight="37.0" prefWidth="299.0" text="Country: Turkey&#10;" textAlignment="CENTER" textFill="WHITE">
+               <VBox.margin>
+                  <Insets left="60.0" />
+               </VBox.margin>
+            </Label>
+            <Label alignment="CENTER" prefHeight="37.0" prefWidth="299.0" text="No of Countries Visited: 15&#10;" textAlignment="CENTER" textFill="WHITE">
+               <VBox.margin>
+                  <Insets left="60.0" />
+               </VBox.margin>
+            </Label>
+            <Label alignment="CENTER" prefHeight="37.0" prefWidth="299.0" text="Hobbies: Photographing, Biking&#10;&#10;" textAlignment="CENTER" textFill="WHITE">
+               <VBox.margin>
+                  <Insets left="60.0" />
+               </VBox.margin>
+            </Label>
+            <Pane prefHeight="85.0" prefWidth="436.0" style="-fx-background-color: DCDCDCDCDCDC;">
+               <VBox.margin>
+                  <Insets top="30.0" />
+               </VBox.margin>
+               <children>
+                  <ImageView fitHeight="54.0" fitWidth="57.0" layoutX="44.0" layoutY="16.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../goTravelJournal_img.png" />
+                     </image>
+                  </ImageView>
+                  <Button layoutX="98.0" layoutY="14.0" onAction="#goToTravelJournal" mnemonicParsing="false" prefHeight="54.0" prefWidth="307.0" text="Travel Journal">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Button>
+               </children>
+            </Pane>
+            <Pane prefHeight="85.0" prefWidth="436.0" style="-fx-background-color: DCDCDCDCDCDC;">
+               <children>
+                  <ImageView fitHeight="54.0" fitWidth="54.0" layoutX="42.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../switchItem.png" />
+                     </image>
+                  </ImageView>
+                  <Button layoutX="98.0" layoutY="14.0" mnemonicParsing="false" prefHeight="54.0" prefWidth="307.0" text="Item Lender">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Button>
+               </children>
+            </Pane>
+            <Pane prefHeight="85.0" prefWidth="436.0" style="-fx-background-color: DCDCDCDCDCDC;">
+               <children>
+                  <ImageView fitHeight="54.0" fitWidth="43.0" layoutX="44.0" layoutY="16.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../switchOperator.png" />
+                     </image>
+                  </ImageView>
+                  <Button layoutX="98.0" layoutY="14.0" mnemonicParsing="false" prefHeight="54.0" prefWidth="307.0" text="Switch Operator">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Button>
+               </children>
+            </Pane>
+            <Pane prefHeight="85.0" prefWidth="436.0" style="-fx-background-color: DCDCDCDCDCDC;">
+               <children>
+                  <ImageView fitHeight="54.0" fitWidth="43.0" layoutX="44.0" layoutY="21.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../SignOut.png" />
+                     </image>
+                  </ImageView>
+                  <Button layoutX="98.0" layoutY="14.0" mnemonicParsing="false" prefHeight="54.0" prefWidth="307.0" text="Sign Out">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Button>
+               </children>
+            </Pane>
+         </children>
+      </VBox>
+      <TableView layoutX="435.0" layoutY="204.0" prefHeight="601.0" prefWidth="1486.0" AnchorPane.topAnchor="204.0">
+        <columns>
+          <TableColumn prefWidth="371.0" text="Photos" />
+          <TableColumn minWidth="0.0" prefWidth="371.0" text="Locations" />
+            <TableColumn minWidth="0.0" prefWidth="371.0" text="Challenges" />
+            <TableColumn minWidth="0.0" prefWidth="370.0" text="Comments" />
+        </columns>
+      </TableView>
+   </children>
+</AnchorPane>

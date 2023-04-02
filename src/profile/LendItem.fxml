@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="profile.LendItemController">
+   <children>
+      <DatePicker fx:id="startDatePicker" editable="false" layoutX="72.0" layoutY="68.0" onAction="#pickStartDate" prefHeight="39.0" prefWidth="192.0" />
+      <DatePicker fx:id="endDatePicker" editable="false" layoutX="313.0" layoutY="68.0" onAction="#pickEndDate" prefHeight="39.0" prefWidth="192.0" />
+      <Label layoutX="72.0" layoutY="42.0" prefHeight="17.0" prefWidth="192.0" text="Starting Date" />
+      <Label layoutX="313.0" layoutY="42.0" prefHeight="17.0" prefWidth="192.0" text="Ending Date" />
+      <ChoiceBox fx:id="selectPlaceChoiceBox" layoutX="156.0" layoutY="129.0" prefHeight="39.0" prefWidth="255.0" onAction="#pickLendingPlace"/>
+      <TextField layoutX="118.0" layoutY="193.0" prefHeight="39.0" prefWidth="178.0" fx:id="nameTextField"/>
+      <TextField layoutX="118.0" layoutY="232.0" prefHeight="39.0" prefWidth="178.0" fx:id="surnameTextField"/>
+      <TextField layoutX="296.0" layoutY="193.0" prefHeight="39.0" prefWidth="178.0" fx:id="emailTextField"/>
+      <TextField layoutX="296.0" layoutY="232.0" prefHeight="39.0" prefWidth="178.0" fx:id="phoneTextField" />
+      <TextField layoutX="118.0" layoutY="271.0" prefHeight="39.0" prefWidth="356.0" fx:id="itemDescriptionTextField"/>
+      <CheckBox layoutX="118.0" layoutY="340.0" mnemonicParsing="false" prefHeight="18.0" prefWidth="221.0" text="I accept that the lost items are not my responsibility." fx:id="permissionCheckBox" />
+      <Button layoutX="405.0" layoutY="325.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="139.0" text="Lend Item" fx:id="reserveLendingButton" onAction="#reserveLendingItem"/>
+   </children>
+</AnchorPane>

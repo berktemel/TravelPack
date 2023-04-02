@@ -1,0 +1,543 @@
+<!DOCTYPE html >
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <title>Google Maps Test</title>
+    <style>
+        /* Always set the map height explicitly to define the size of the div
+         * element that contains the map. */
+        #map {
+            height: 100%;
+            width: 75%;
+            left: 5px;
+        }
+
+        /* Bg color to match with right side menu */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #F4F4F4;
+        }
+
+    </style>
+</head>
+
+<html>
+<body>
+
+
+<div id="map"></div>
+
+<script>
+
+    //much of the JS functions are kept in this html file for easy access and dividing to files cause some problems with Google's functions
+
+    //states are for the
+    var challengeState = false;
+    var coronaStats = false;
+    var friendsState = false;
+    var activitiesState = false;
+
+    //time keepers for cron
+    var timerForChal = 0;
+    var targetTime = 0;
+    var userX = 39.870058498961875;
+    var userY = 32.749929653918954;//first location of the user (google location was not being defined here)
+    var challengeTo;
+
+
+    //accessing icons from here
+    const iconList = {
+        academic: {
+            //icon from https://www.mcicon.com
+            icon: "Science.png",
+        },
+        bus: {
+            icon: "busicon_map.png",
+        },
+        challenge: {
+            //icon from https://www.mcicon.com
+            icon: "Targets.png",
+        },
+        festival: {
+            icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+        },
+        concert: {
+            icon: "http://maps.google.com/mapfiles/ms/icons/orange-dot.png",
+        },
+        sports: {
+            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+        },
+        //not to be confused with activity theater
+        theatreBuild: {
+            icon: "theatre.png",
+        },
+        theatre: {
+            icon: "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
+        },
+        other: {
+            icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+        },
+        friend: {
+            icon: "friendicon.png",
+        },
+        avm: {
+            icon:"shop.png"
+        }
+
+    };
+
+
+    //marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png')
+    //this is for different acivities
+
+    //these lists keep track of challenges
+    var chal_to_list = [];
+    var chal_from_list = [];
+    var general_markers = [];
+    var chal_time_list = [];
+
+    //these addresses will be replaced with urls to website
+    current_overlays=["locations"]
+    var xml_list = {};
+    xml_list["locations"] = "locations.xml";
+    xml_list["activities"] = "activities.xml";
+    xml_list["challenge"] = "challenges.xml";
+    //challenge markers will just be like others
+    //they will have a seperate xml file lookup for the challenge details
+    //or make normal markers challenge markers when they are ticked
+    //probably needs to re init map
+    //so keep zoom as a var
+    xml_list["friends"] = "friends.xml";
+    xml_list["exclusive"] = "";
+    xml_list["corona"] = "";
+    var activitiesList = {}; //this linked list is to access activities types
+
+    activitiesList["concert"] = false;
+
+    activitiesList["theatre"] = false;
+
+    activitiesList["sports"] = false;
+
+    activitiesList["festival"] = false;
+
+    activitiesList["other"] = false;
+
+
+
+    //add explanation windows !!!!!!!!!!!!!!!!!!!!
+    //clear all arrays !!!!!!!!!!!! not sure
+    function initMap() {
+        firstRun();
+        var directionsService = new google.maps.DirectionsService();
+        const directionsRenderer = new google.maps.DirectionsRenderer();
+        var service = new google.maps.DistanceMatrixService();
+
+
+        var map = new google.maps.Map(document.getElementById('map'), {
+            center: new google.maps.LatLng(getUserX(),getUserY()),
+            zoom: 17
+        });
+
+        //mark user as same as the friend icon
+        var icon_type = iconList["friend"] || {};
+        new google.maps.Marker({
+            position: new google.maps.LatLng(getUserX(),getUserY()),
+            map,
+            icon: icon_type.icon,
+        });
+
+        var styles = [
+            {
+                "featureType": "all",
+                "stylers": [
+                    { "color": "#C0C0C0" }
+                ]
+            },{
+                "featureType": "road",
+                "elementType": "geometry",
+                "stylers": [
+                    { "color": "#FFFFFF" }
+                ]
+            },{
+                //Taken from Google Documentation, road names were not seen
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#616161" }],
+            },
+            {
+                elementType: "labels.text.stroke",
+                stylers: [{ color: "#f5f5f5" }],
+            },{
+                "featureType": "landscape",
+                "elementType": "labels",
+                "stylers": [
+                    { "visibility": "off" }
+                ]
+            },{
+                featureType: "poi",
+                stylers: [{ visibility: "off" }],
+            },
+            {
+                featureType: "transit",
+                elementType: "labels.icon",
+                stylers: [{ visibility: "off" }],
+            },
+
+        ]
+
+        map.setOptions({ styles: styles });
+
+        var infoWindow = new google.maps.InfoWindow;
+
+
+        //if challanges are activated
+        if (challengeState){
+            unlockChallenges(xml_list["challenge"]);
+        }
+
+        //abandoned: just used for main map
+        current_overlays.forEach(layer => mapper(xml_list[layer], challengeState, directionsService, directionsRenderer,map,infoWindow));
+        //TEST IF ORDER MATTERS
+
+        if (friendsState){
+            showFriends(xml_list["friends"],map,infoWindow);
+        }
+        if (activitiesState){
+            showActivities(xml_list["activities"],map,infoWindow)
+        }
+
+    }
+
+    function firstRun(){
+        downloadUrl(xml_list["locations"], function(data) {
+            var xml = data.responseXML;
+            var markers = xml.documentElement.getElementsByTagName('marker');
+            Array.prototype.forEach.call(markers, function(markerElem) {
+                var id = markerElem.getAttribute('id');
+                general_markers[id] = new google.maps.LatLng(
+                    parseFloat(markerElem.getAttribute('lat')),
+                    parseFloat(markerElem.getAttribute('lng')));
+                //console.log(general_markers);
+            });
+
+        });
+    }
+
+    /*
+    * This part is from the documentation*/
+    function downloadUrl(url, callback) {
+        var request = window.ActiveXObject ?
+            new ActiveXObject('Microsoft.XMLHTTP') :
+            new XMLHttpRequest;
+
+        request.onreadystatechange = function() {
+            if (request.readyState == 4) {
+                request.onreadystatechange = doNothing;
+                callback(request, request.status);
+            }
+        };
+
+        request.open('GET', url, true);
+        request.send(null);
+    }
+
+    //necessary function for console debugging, should leave it here
+    function doNothing() {}
+
+
+    function mapper(xmlfile, challengeState, directionsService, directionsRenderer, map, infoWindow){
+
+        // Change this depending on the name of your PHP or XML file
+        downloadUrl(xmlfile, function(data) {
+            var xml = data.responseXML;
+            var markers = xml.documentElement.getElementsByTagName('marker');
+            Array.prototype.forEach.call(markers, function(markerElem) {
+                var id = markerElem.getAttribute('id');
+                var name = markerElem.getAttribute('name');
+                var type = markerElem.getAttribute('type');
+
+                var point = new google.maps.LatLng(
+                    parseFloat(markerElem.getAttribute('lat')),
+                    parseFloat(markerElem.getAttribute('lng')));
+                var infowincontent = document.createElement('div');
+
+
+
+                content = ""
+                if (!challengeState){
+                    var icon_type = iconList[type] || {};
+
+
+                }
+                else{
+                    //if the markers are included in the challenge markers list
+                    if (chal_to_list.includes(id) || chal_from_list.includes(id)){
+
+                        var icon_type = iconList["challenge"] || {};
+                        //added this which will act as a button for triggering open window  content for the said button
+                        //<button type="button" onclick="alert('Hello world!')">Click Me!</button>
+                        var route = document.createElement('button');
+                        var linkText = document.createTextNode("Inspect challenge route");
+                        route.appendChild(linkText);
+
+
+                        var beginRoute = document.createElement('button');
+                        var chalText = document.createTextNode("Begin Challenge!");
+                        beginRoute.appendChild(chalText);
+
+                        //decide if it is to or from
+                        //-1 means not in list, 0 means in the list
+                        if (chal_to_list.indexOf(id) === -1){
+                            //console.log(id)
+                            //console.log(chal_to_list.indexOf(id))
+                            var toloc =  JSON.parse(JSON.stringify(general_markers[chal_to_list[chal_from_list.indexOf(id)]]));
+                            var fromloc = JSON.parse(JSON.stringify(point));
+                            console.log("from")
+                        }
+                        else{
+                            var toloc = JSON.parse(JSON.stringify(general_markers[chal_from_list[chal_to_list.indexOf(id)]]));
+                            //causes many problems, have to find a
+                            var fromloc = JSON.parse(JSON.stringify(point));
+                            console.log("to")
+                        }
+
+                        route.onclick = function () {
+                            calculateAndDisplayRoute(toloc, fromloc, directionsService, directionsRenderer);
+                        };
+                        beginRoute.onclick = function () {
+                            //starts timer and gets the id of the allocated time
+                            timerForChal = startTrack();
+                            var here1 = chal_from_list.indexOf(id);
+                            var here2 = chal_to_list.indexOf(id);
+                            var use = (here1 > here2 ? here1 : here2)
+                            console.log(use)
+                            targetTime = chal_time_list[use];
+                        };
+                        infowincontent.appendChild(route)
+                        infowincontent.appendChild(beginRoute)
+                        infowincontent.appendChild(document.createElement('br'))
+                    }
+                    else{
+                        var icon_type = iconList[type] || {};
+                    }
+                }
+
+                var locationsPage = document.createElement('iframe');
+                var locTest = document.createTextNode("Details");
+                locationsPage.appendChild(locTest);
+                locationsPage.src = 'Locations.html?loc=' + id;
+                locationsPage.width = "400";
+                locationsPage.height = "400";
+                infowincontent.appendChild(locationsPage)
+
+
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: point,
+                    icon: icon_type.icon
+
+                });
+                marker.addListener('click', function() {
+                    infoWindow.setContent(infowincontent);
+                    infoWindow.open(map, marker);
+                });
+            });
+        });
+        directionsRenderer.setMap(map);
+
+    }
+
+    // Efes func
+    function getUserX(){
+        return userX;
+    }
+    function getUserY(){
+        return userY;
+    }
+    /*
+    * Will add debug screen for changing user location*/
+
+
+    function unlockChallenges(xmlfile){
+        downloadUrl(xmlfile, function(data) {
+            var xml = data.responseXML;
+            var markers = xml.documentElement.getElementsByTagName('challengeSet');
+            Array.prototype.forEach.call(markers, function(markerElem) {
+                //record locations and time limits
+                chal_to_list.push(markerElem.getAttribute('to'));
+                chal_from_list.push(markerElem.getAttribute('from'));
+                chal_time_list.push(markerElem.getAttribute('time'));
+            });
+
+        });
+
+
+    }
+
+    function showFriends(xmlfile,map,infoWindow){
+
+        downloadUrl(xmlfile, function(data) {
+            var xml = data.responseXML;
+            var markers = xml.documentElement.getElementsByTagName('friend');
+            Array.prototype.forEach.call(markers, function(markerElem) {
+
+                var id = markerElem.getAttribute('id');
+                var name = markerElem.getAttribute('name');
+                var type = markerElem.getAttribute('type');
+                var point = new google.maps.LatLng(
+                    parseFloat(markerElem.getAttribute('lat')),
+                    parseFloat(markerElem.getAttribute('lng')));
+                var infowincontent = document.createElement('div');
+                var strong = document.createElement('strong');
+                strong.textContent = name
+                infowincontent.appendChild(strong);
+                infowincontent.appendChild(document.createElement('br'));
+
+                var text = document.createElement('text');
+                infowincontent.appendChild(text);
+                var icon_type = iconList[type] || {};
+
+
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: point,
+                    icon: icon_type.icon
+
+                });
+                console.log(marker)
+                marker.addListener('click', function() {
+                    infoWindow.setContent(infowincontent);
+                    infoWindow.open(map, marker);
+                });
+            });
+        });
+    }
+
+
+    function showActivities(xmlfile,map,infoWindow){
+
+        downloadUrl(xmlfile, function(data) {
+            var xml = data.responseXML;
+            var markers = xml.documentElement.getElementsByTagName('activity');
+            Array.prototype.forEach.call(markers, function(markerElem) {
+                var type = markerElem.getAttribute('type');
+                if(activitiesList[type]){
+                    var id = markerElem.getAttribute('id');
+                    var name = markerElem.getAttribute('name');
+                    var infowincontent = document.createElement('div');
+                    var point = new google.maps.LatLng(
+                        parseFloat(markerElem.getAttribute('lat')),
+                        parseFloat(markerElem.getAttribute('lng')));
+                    var strong = document.createElement('strong');
+                    strong.textContent = name
+                    infowincontent.appendChild(strong);
+                    infowincontent.appendChild(document.createElement('br'));
+                    var text = document.createElement('text');
+                    infowincontent.appendChild(text);
+                    var icon_type = iconList[type] || {};
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: point,
+                        icon: icon_type.icon
+                    });
+                    marker.addListener('click', function() {
+                        infoWindow.setContent(infowincontent);
+                        infoWindow.open(map, marker);
+                    });
+                };
+            });
+        });
+    }
+
+
+    function calculateAndDisplayRoute(toloc, fromloc, directionsService, directionsRenderer) {
+
+        //this vars are created for time calculations and declared here to show that the road is displayed
+        challengeTo = toloc;
+
+
+        directionsService.route(
+            {
+                origin: toloc,
+                destination: fromloc,
+                travelMode: "WALKING",
+            },
+            //This part is from the documentation
+            (response, status) => {
+                if (status == "OK") {
+                    directionsRenderer.setDirections(response);
+                } else {
+                    window.alert("Directions request failed due to " + status);
+                }
+
+            }
+        );
+    }
+    //////xoring was the fastest way to switch state
+    function toggleChallenges() {
+        challengeState ^= true;
+        initMap();
+    }
+    function toggleCoronaStats(){
+        coronaStats ^= true;
+        initMap();
+    }
+    function toggleFriends(){
+        friendsState ^= true;
+        initMap();
+    }
+    function toggleActivityRadar(){
+        activitiesState ^= true;
+        initMap();
+    }
+    function toggleConcerts(){
+        activitiesList["concert"] ^= true;
+        initMap();
+    }
+    function toggleTheatre() {
+        activitiesList["theatre"] ^= true;
+        initMap();
+    }
+    function toggleSports(){
+        activitiesList["sports"] ^= true;
+        initMap();
+    }
+    function toggleFestivals(){
+        activitiesList["festival"] ^= true;
+        initMap();
+    }
+    function toggleActivityOther(){
+        activitiesList["other"] ^= true;
+        initMap();
+    }
+
+    function getChallengeTo(){
+        return challengeTo;
+    }
+
+    function setLocationJSTest(x,y){
+
+        userX = x;
+        userY = y;
+        initMap();
+
+    }
+
+    function completeChallenge(id){
+        return(finishTrack(timerForChal, targetTime ));
+    }
+
+    function seeRemainder(){
+
+    }
+</script>
+<script src="Cron.js"></script>
+
+<script async
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDQ4rO00ZflUbcUU7kyyPORcRQty77PqUc&libraries=geometry&callback=initMap">
+</script>
+</body>
+</html>
+z
